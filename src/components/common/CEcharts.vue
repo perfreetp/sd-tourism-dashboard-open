@@ -55,6 +55,9 @@ onMounted(() => {
     }
   }
   window.addEventListener('resize', echartsResize)
+  // 入场动画结束后重新校准图表尺寸，防止错位
+  window.setTimeout(echartsResize, 400)
+  window.setTimeout(echartsResize, 1000)
 })
 const Eaclick = (val: any) => {
   emit('eclick', val)

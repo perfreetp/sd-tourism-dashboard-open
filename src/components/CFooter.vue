@@ -3,19 +3,21 @@
   <footer class="number-footer">
     <div class="number-item" v-for="item in numberData" :key="item.id">
       <!-- 标题 -->
-      <div class="title">{{ item.title }}</div>
+      <transition name="fade" mode="out-in">
+        <div class="title" :key="item.title">{{ item.title }}</div>
+      </transition>
       <!-- 数据 -->
       <div class="data">
         <img class="data-img" :src="item.img" alt="图标" />
         <div class="data-info">
           <!-- 数字 -->
           <div class="number">
-            <Vue3Odometer class="number-value" :value="item.value" />
+            <Vue3Odometer class="number-value" :key="currentViewName" :value="item.value" />
             <span class="number-unit">{{ item.unit }}</span>
           </div>
           <!-- 比较信息 -->
           <div class="compare">
-            <span class="compare-label">较上次</span>
+            <span class="compare-label">同比增速</span>
             <img class="compare-img" :src="item.compare === 'up' ? up : down" alt="上涨下跌图标" />
             <span
               class="compare-value"
@@ -31,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { ref, watch } from 'vue'
 import Vue3Odometer from 'vue3-odometer'
 import 'odometer/themes/odometer-theme-default.css'
 import 行李箱图标 from '@/assets/images/行李箱图标.png'
@@ -39,76 +41,52 @@ import 收入图标 from '@/assets/images/收入图标.png'
 import 刷卡图标 from '@/assets/images/刷卡图标.png'
 import up from '@/assets/images/up.png'
 import down from '@/assets/images/down.png'
-const numberData = ref<any>([
-  {
-    title: '2022年旅游业收入',
-    value: 12345.6,
-    unit: '万元',
-    compare: 'down',
-    proportion: 2.9,
-    img: 收入图标
-  },
-  {
-    title: '2022年来访游客数',
-    value: 731.2,
-    unit: '万人',
-    compare: 'up',
-    proportion: 1.6,
-    img: 行李箱图标
-  },
-  {
-    title: '2022年山东人口出游支出',
-    value: 8373.1,
-    unit: '万元',
-    compare: 'down',
-    proportion: 2.9,
-    img: 刷卡图标
-  }
-])
+import { dashboardStore, currentViewName } from '@/store/dashboard'
+import { getMetric } from '@/assets/data/cityData'
 
-let intervalId: any = null
-
-// 用于存储上一次的 value 值
-const lastValues = ref<number[]>(numberData.value.map((item: any) => item.value))
-
-function randomizeNumberData() {
-  numberData.value = numberData.value.map((item: any, idx: number) => {
-    // 生成一个基于当前值的随机浮动（±10%）
-    const randomFactor = 1 + (Math.random() - 0.5) * 0.2 // ±10%
-    const prevValue = lastValues.value[idx]
-    const newValue = +(item.value * randomFactor).toFixed(1)
-    // 计算变化百分比
-    let proportion = 0
-    let compare: 'up' | 'down' = 'up'
-    if (prevValue !== 0) {
-      proportion = +(((newValue - prevValue) / Math.abs(prevValue)) * 100).toFixed(1)
-      compare = proportion >= 0 ? 'up' : 'down'
-      proportion = Math.abs(proportion)
+const buildNumberData = () => {
+  const metric = getMetric(dashboardStore.selectedCity)
+  const name = currentViewName.value
+  return [
+    {
+      id: 1,
+      title: `${name}旅游业收入`,
+      value: metric.revenue,
+      unit: '万元',
+      compare: metric.growth >= 0 ? 'up' : 'down',
+      proportion: Math.abs(metric.growth),
+      img: 收入图标
+    },
+    {
+      id: 2,
+      title: `${name}来访游客数`,
+      value: metric.tourists,
+      unit: '万人',
+      compare: metric.growth >= 0 ? 'up' : 'down',
+      proportion: Math.abs(metric.growth),
+      img: 行李箱图标
+    },
+    {
+      id: 3,
+      title: `${name}人口出游支出`,
+      value: metric.spending,
+      unit: '万元',
+      compare: metric.growth >= 0 ? 'up' : 'down',
+      proportion: Math.abs(metric.growth),
+      img: 刷卡图标
     }
-    // 更新lastValues
-    lastValues.value[idx] = newValue
-    return {
-      ...item,
-      value: newValue,
-      proportion,
-      compare
-    }
-  })
+  ]
 }
 
-onMounted(() => {
-  // 初始化lastValues
-  lastValues.value = numberData.value.map((item: any) => item.value)
-  intervalId = window.setInterval(() => {
-    randomizeNumberData()
-  }, 10000)
-})
+const numberData = ref<any[]>(buildNumberData())
 
-onUnmounted(() => {
-  if (intervalId) {
-    clearInterval(intervalId)
+// 城市切换时重置为对应区域数据
+watch(
+  () => dashboardStore.selectedCity,
+  () => {
+    numberData.value = buildNumberData()
   }
-})
+)
 </script>
 
 <style lang="scss" scoped>
@@ -121,11 +99,11 @@ onUnmounted(() => {
   gap: 72px;
   pointer-events: none;
   bottom: -200px;
-    animation: entranceAnimation ease-in-out 0.75s forwards;
+  animation: entranceAnimation ease-in-out 0.75s forwards;
 }
 .number-item {
   position: relative;
-  width: 268px;
+  width: 300px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -140,6 +118,8 @@ onUnmounted(() => {
     align-items: center;
     justify-content: center;
     font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
   }
   .data {
     height: 82px;
@@ -190,11 +170,19 @@ onUnmounted(() => {
   }
 }
 @keyframes entranceAnimation {
-  0%{
+  0% {
     bottom: -200px;
   }
-  100%{
+  100% {
     bottom: 24px;
   }
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.4s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

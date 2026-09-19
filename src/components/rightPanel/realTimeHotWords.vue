@@ -11,65 +11,19 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import CPanel from '@/components/common/CPanel.vue'
 import CEcharts from '@/components/common/CEcharts.vue'
 import defaultIcon from '@/assets/images/real-circle-defalut.png'
 import hotIcon from '@/assets/images/real-circle-hot.png'
+import { dashboardStore } from '@/store/dashboard'
+import { getCityPanelData, getProvincePanelData } from '@/assets/data/cityData'
 const option = ref<any>({})
 const initEcharts = () => {
-  const wordsData: {
-    name: string
-    value: number
-    position: number[]
-  }[] = [
-    {
-      name: '海边',
-      value: 19,
-      position: [50, 50]
-    },
-    {
-      name: '人多',
-      value: 4,
-      position: [10, 30]
-    },
-    {
-      name: '孔子',
-      value: 8,
-      position: [85, 80]
-    },
-    {
-      name: '老师儿',
-      value: 2,
-      position: [27, 55]
-    },
-    {
-      name: '热情',
-      value: 6,
-      position: [68, 17]
-    },
-
-    {
-      name: '豪爽',
-      value: 7,
-      position: [20, 90]
-    },
-    {
-      name: '大葱',
-      value: 5,
-      position: [35, 20]
-    },
-    {
-      name: '美食',
-      value: 4,
-      position: [65, 89]
-    },
-    {
-      name: '泰山',
-      value: 16,
-      position: [90, 40]
-    }
-  ]
+  const wordsData = (dashboardStore.selectedCity
+    ? getCityPanelData(dashboardStore.selectedCity)
+    : getProvincePanelData()
+  ).hotWords
   const optionData: any = []
   // 渲染数据，并写入chart
   wordsData.map((item: any) => {
@@ -157,6 +111,13 @@ const initEcharts = () => {
 onMounted(() => {
   option.value = initEcharts()
 })
+// 城市切换时刷新热词
+watch(
+  () => dashboardStore.selectedCity,
+  () => {
+    option.value = initEcharts()
+  }
+)
 </script>
 
 <style lang="scss" scoped>

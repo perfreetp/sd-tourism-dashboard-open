@@ -4,6 +4,7 @@
     <template #header>景点人流排名</template>
     <template #content>
       <vue3ScrollSeamless
+        :key="currentViewName"
         :dataList="list"
         class="list"
         :class-option="{
@@ -11,7 +12,7 @@
         }"
       >
         <div class="list-warpper">
-          <article class="list__item" v-for="(item, index) in list" :key="useId">
+          <article class="list__item" v-for="(item, index) in list" :key="useId() + index">
             <section class="item__index">{{ 'NO.' + (index + 1) }}</section>
             <section class="item__label">{{ item.label }}</section>
             <!-- 进度条 -->
@@ -33,18 +34,28 @@
 <script setup lang="ts">
 import { vue3ScrollSeamless } from 'vue3-scroll-seamless'
 import CPanel from '@/components/common/CPanel.vue'
-import { onMounted, ref, useId } from 'vue'
+import { ref, useId, watch } from 'vue'
 import { rankingOfScenicSpots } from '@/assets/data/人流排名'
+import { dashboardStore, currentViewName } from '@/store/dashboard'
+import { getCityPanelData } from '@/assets/data/cityData'
+
 const list = ref<{ label: string; value: number }[]>([])
-let maxValue = 0
+const maxValue = ref(0)
+
 // 计算进度
 const getProgressValue = (value: number) => {
-  return -((maxValue - value) / maxValue) * 100 + '%'
+  return -((maxValue.value - value) / maxValue.value) * 100 + '%'
 }
-onMounted(() => {
-  list.value = rankingOfScenicSpots.sort((a, b) => b.value - a.value)
-  maxValue = rankingOfScenicSpots.reduce((acc, item) => acc + item.value, 0)
-})
+
+const loadData = () => {
+  const source = dashboardStore.selectedCity
+    ? getCityPanelData(dashboardStore.selectedCity).scenicRanking
+    : rankingOfScenicSpots
+  list.value = [...source].sort((a, b) => b.value - a.value)
+  maxValue.value = source.reduce((acc, item) => acc + item.value, 0)
+}
+
+watch(() => dashboardStore.selectedCity, loadData, { immediate: true })
 </script>
 <style lang="scss" scoped>
 .list {
@@ -87,6 +98,7 @@ onMounted(() => {
         height: 100%;
         width: 100%;
         background: linear-gradient(90deg, #ffa832, #f8c47d);
+        transition: left 0.6s ease;
       }
     }
   }

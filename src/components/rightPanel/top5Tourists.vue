@@ -9,10 +9,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import * as echarts from 'echarts'
 import CPanel from '@/components/common/CPanel.vue'
 import CEcharts from '@/components/common/CEcharts.vue'
+import { dashboardStore } from '@/store/dashboard'
+import { getCityPanelData, getProvincePanelData } from '@/assets/data/cityData'
 
 const option = ref<any>({})
 const chartRef = ref()
@@ -21,6 +23,10 @@ let currentIndex = 0
 const VALUE = [123, 100, 125, 100, 125]
 
 const createEchartBar = () => {
+  const top5 = (dashboardStore.selectedCity
+    ? getCityPanelData(dashboardStore.selectedCity)
+    : getProvincePanelData()
+  ).top5
   return {
     /**区域位置*/
     grid: {
@@ -34,7 +40,7 @@ const createEchartBar = () => {
     },
     xAxis: {
       type: 'category',
-      data: ['青岛市', '济南市', '烟台市', '威海市', '潍坊市'],
+      data: top5.names,
       axisLine: {
         show: false
       },
@@ -43,10 +49,14 @@ const createEchartBar = () => {
       },
       axisLabel: {
         color: '#C5D6E6',
-        fontSize: 12
+        fontSize: 12,
+        interval: 0,
+        width: 64,
+        overflow: 'truncate'
       }
     },
     yAxis: {
+      splitNumber: 3,
       axisLine: {
         show: false
       },
@@ -130,7 +140,7 @@ const createEchartBar = () => {
             borderColor: 'rgba(218, 163, 88, 1)' // 边框颜色
           }
         },
-        data: [123, 100, 125, 100, 125],
+        data: top5.values,
         z: 10
       }
     ]
@@ -166,6 +176,13 @@ const startHighlightLoop = (chart: any) => {
 onMounted(() => {
   option.value = createEchartBar()
 })
+// 城市切换时刷新图表数据
+watch(
+  () => dashboardStore.selectedCity,
+  () => {
+    option.value = createEchartBar()
+  }
+)
 onUnmounted(() => {
   if (highlightTimer) {
     clearInterval(highlightTimer)

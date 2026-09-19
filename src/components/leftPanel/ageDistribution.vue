@@ -9,17 +9,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import * as echarts from 'echarts'
 import CPanel from '@/components/common/CPanel.vue'
 import CEcharts from '@/components/common/CEcharts.vue'
+import { dashboardStore } from '@/store/dashboard'
+import { getCityPanelData, getProvincePanelData } from '@/assets/data/cityData'
 import type { EChartsOption, TooltipComponentOption, CustomSeriesOption, BarSeriesOption } from 'echarts'
 
 const option = ref<EChartsOption>({})
 const chartRef = ref()
 let highlightTimer: any = null
 let currentIndex = 0
-const values: number[] = [2000, 1430, 800, 410, 120]
+const getValues = (): number[] =>
+  (dashboardStore.selectedCity ? getCityPanelData(dashboardStore.selectedCity) : getProvincePanelData()).ageDistribution
 // 高亮循环方法
 const startHighlightLoop = (chart: any) => {
   if (!chart) return
@@ -42,11 +45,11 @@ const startHighlightLoop = (chart: any) => {
       dataIndex: currentIndex
     })
     // 更新索引，循环
-    currentIndex = (currentIndex + 1) % values.length
+    currentIndex = (currentIndex + 1) % 5
   }, 1500)
 }
 
-const createEchartBar = (): EChartsOption => {
+const createEchartBar = (values: number[]): EChartsOption => {
   const offsetX = 10
   const offsetY = 5
   // 创建左侧面
@@ -318,8 +321,15 @@ const createEchartBar = (): EChartsOption => {
   }
 }
 onMounted(() => {
-  option.value = createEchartBar()
+  option.value = createEchartBar(getValues())
 })
+// 城市切换时刷新图表数据
+watch(
+  () => dashboardStore.selectedCity,
+  () => {
+    option.value = createEchartBar(getValues())
+  }
+)
 onUnmounted(() => {
   if (highlightTimer) {
     clearInterval(highlightTimer)

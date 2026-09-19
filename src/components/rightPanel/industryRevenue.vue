@@ -9,10 +9,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import * as echarts from 'echarts'
 import CPanel from '@/components/common/CPanel.vue'
 import CEcharts from '@/components/common/CEcharts.vue'
+import { dashboardStore } from '@/store/dashboard'
+import { getCityPanelData, getProvincePanelData } from '@/assets/data/cityData'
 
 const option = ref<any>({})
 const chartRef = ref()
@@ -21,30 +23,11 @@ let currentIndex = 0
 const VALUE = [100, 200, 300, 400, 500, 600, 700]
 
 const createEchartBar = () => {
+  const panelData = dashboardStore.selectedCity
+    ? getCityPanelData(dashboardStore.selectedCity)
+    : getProvincePanelData()
   const xAxisData = ['旅游', '住宿', '餐饮', '购物', '娱乐', '交通', '其他']
-  const seriesData = [
-    {
-      value: 100
-    },
-    {
-      value: 200
-    },
-    {
-      value: 300
-    },
-    {
-      value: 400
-    },
-    {
-      value: 500
-    },
-    {
-      value: 600
-    },
-    {
-      value: 700
-    }
-  ]
+  const seriesData = panelData.industryRevenue.map(value => ({ value }))
 
   let maxAmount = 0
   seriesData.map(item => {
@@ -82,6 +65,7 @@ const createEchartBar = () => {
     },
     yAxis: {
       type: 'value',
+      splitNumber: 3,
       axisLine: {
         show: false
       },
@@ -215,6 +199,13 @@ const startHighlightLoop = (chart: any) => {
 onMounted(() => {
   option.value = createEchartBar()
 })
+// 城市切换时刷新图表数据
+watch(
+  () => dashboardStore.selectedCity,
+  () => {
+    option.value = createEchartBar()
+  }
+)
 onUnmounted(() => {
   if (highlightTimer) {
     clearInterval(highlightTimer)

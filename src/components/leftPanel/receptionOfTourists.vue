@@ -9,12 +9,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import * as echarts from 'echarts'
 import CPanel from '@/components/common/CPanel.vue'
 import CEcharts from '@/components/common/CEcharts.vue'
+import { dashboardStore } from '@/store/dashboard'
+import { getCityPanelData, getProvincePanelData } from '@/assets/data/cityData'
 const option = ref<any>({})
+const getPanelData = () =>
+  dashboardStore.selectedCity ? getCityPanelData(dashboardStore.selectedCity) : getProvincePanelData()
 const createEchartLine = () => {
+  const panelData = getPanelData()
   return {
     tooltip: {
       trigger: 'axis'
@@ -85,7 +90,7 @@ const createEchartLine = () => {
       {
         name: '2021年',
         type: 'line',
-        data: [23, 60, 20, 36, 23, 85, 70, 60, 78, 89, 68, 56],
+        data: panelData.monthly2021,
         lineStyle: {
           normal: {
             width: 2,
@@ -125,7 +130,7 @@ const createEchartLine = () => {
       {
         name: '2022年',
         type: 'line',
-        data: [145, 78, 88, 99, 36, 109, 120, 150, 99, 89, 100, 120],
+        data: panelData.monthly2022,
         lineStyle: {
           normal: {
             width: 2,
@@ -165,5 +170,12 @@ const createEchartLine = () => {
 onMounted(() => {
   option.value = createEchartLine()
 })
+// 城市切换时刷新图表数据
+watch(
+  () => dashboardStore.selectedCity,
+  () => {
+    option.value = createEchartLine()
+  }
+)
 </script>
 <style lang="scss" scoped></style>

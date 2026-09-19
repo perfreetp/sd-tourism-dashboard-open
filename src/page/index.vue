@@ -8,6 +8,8 @@
     <LeftPanel />
     <!-- 右侧数据面板 -->
     <RightPanel />
+    <!-- 城市详情抽屉 -->
+    <CityDrawer />
     <!-- 底部组件 -->
     <CFooter />
   </main>
@@ -18,9 +20,18 @@ import CHeader from '@/components/CHeader.vue'
 import CMap from '@/components/CMap.vue'
 import LeftPanel from '@/components/leftPanel.vue'
 import RightPanel from '@/components/rightPanel.vue'
+import CityDrawer from '@/components/CityDrawer.vue'
 import CFooter from '@/components/CFooter.vue'
-import { onMounted } from 'vue'
+import { onMounted, onBeforeUnmount } from 'vue'
 import autofit from 'autofit.js'
+import { clearSelection } from '@/store/dashboard'
+
+// 按 Esc 返回全省总览
+const onKeydown = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') {
+    clearSelection()
+  }
+}
 
 onMounted(() => {
   autofit.init({
@@ -29,6 +40,11 @@ onMounted(() => {
     dw: 1920,
     resize: true
   })
+  window.addEventListener('keydown', onKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
 })
 </script>
 

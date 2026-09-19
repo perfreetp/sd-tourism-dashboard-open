@@ -1,6 +1,22 @@
 <!-- 顶部标题 -->
 <template>
   <header class="header">山东省旅游指标监控平台</header>
+  <!-- 当前查看区域 -->
+  <div class="view-indicator">
+    <transition name="fade" mode="out-in">
+      <span :key="currentViewName" class="view-text">当前查看：{{ currentViewName }}</span>
+    </transition>
+    <transition name="fade">
+      <button v-if="dashboardStore.selectedCity" class="back-btn" @click="clearSelection">返回全省</button>
+    </transition>
+  </div>
+  <!-- 自动巡览开关 -->
+  <div class="tour-switch" @click="toggleAutoTour">
+    <span class="tour-label">自动巡览</span>
+    <span class="tour-track" :class="{ active: dashboardStore.autoTour }">
+      <span class="tour-thumb"></span>
+    </span>
+  </div>
   <!-- 文字轮播 -->
   <div class="text-carousel">
     <transition-group name="carousel" tag="div" class="carousel-container">
@@ -13,6 +29,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { dashboardStore, currentViewName, clearSelection, toggleAutoTour } from '@/store/dashboard'
 
 // 轮播数据
 const carouselData = ref([
@@ -115,6 +132,78 @@ onBeforeUnmount(() => {
   color: rgba(230, 239, 253);
 }
 
+.view-indicator {
+  position: absolute;
+  top: 40px;
+  left: 48px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  .view-text {
+    font-size: 18px;
+    color: rgba(255, 213, 138, 1);
+    letter-spacing: 2px;
+    text-shadow: 0 0 12px rgba(218, 163, 88, 0.6);
+  }
+  .back-btn {
+    padding: 6px 16px;
+    font-size: 14px;
+    color: #fff;
+    background: linear-gradient(90deg, rgba(218, 163, 88, 0.35), rgba(218, 163, 88, 0.15));
+    border: 1px solid rgba(218, 163, 88, 0.8);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    &:hover {
+      background: linear-gradient(90deg, rgba(218, 163, 88, 0.6), rgba(218, 163, 88, 0.3));
+    }
+  }
+}
+
+.tour-switch {
+  position: absolute;
+  top: 40px;
+  right: 48px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  .tour-label {
+    font-size: 16px;
+    color: rgba(201, 211, 234, 1);
+    letter-spacing: 1px;
+  }
+  .tour-track {
+    position: relative;
+    width: 48px;
+    height: 24px;
+    border-radius: 12px;
+    background: rgba(100, 110, 132, 0.6);
+    border: 1px solid rgba(138, 165, 219, 0.5);
+    transition: all 0.3s;
+    &.active {
+      background: rgba(218, 163, 88, 0.7);
+      border-color: rgba(218, 163, 88, 1);
+      .tour-thumb {
+        left: 26px;
+      }
+    }
+    .tour-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      transition: left 0.3s;
+    }
+  }
+}
+
 .text-carousel {
   position: absolute;
   top: 120px;
@@ -178,5 +267,15 @@ onBeforeUnmount(() => {
 .carousel-leave-from {
   transform: translateY(0);
   opacity: 1;
+}
+
+// 淡入淡出
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.4s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

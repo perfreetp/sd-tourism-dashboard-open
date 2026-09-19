@@ -2,16 +2,34 @@
 <template>
   <div class="map" id="map">
     <div class="map-content">
-      <CEcharts :option="mapOption" />
+      <CEcharts :option="mapOption" @eclick="onMapClick" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { getMapOption } from '@/modules/echartMap'
+import { dashboardStore, selectCity } from '@/store/dashboard'
+import { cityNames } from '@/assets/data/cityData'
 import CEcharts from './common/CEcharts.vue'
+
 const mapOption = ref(getMapOption())
+
+watch(
+  () => dashboardStore.selectedCity,
+  city => {
+    mapOption.value = getMapOption(city)
+  }
+)
+
+// 点击柱子、城市名称或地图区域时选中城市
+const onMapClick = (params: any) => {
+  const name = params?.name
+  if (name && cityNames.includes(name)) {
+    selectCity(name)
+  }
+}
 </script>
 
 <style lang="scss" scoped>
