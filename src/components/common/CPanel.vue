@@ -19,8 +19,9 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-bottom: 24px;
+  gap: 8px;
+  padding-bottom: 12px;
+  min-height: 0;
   &-header {
     position: relative;
     width: 100%;
@@ -46,10 +47,12 @@
   &-container {
     position: relative;
     flex: 1;
+    min-height: 0;
     background: url('@/assets/images/panelBottomBg.png') no-repeat center bottom;
     background-size: 100% 100%;
-    padding: 0 24px;
+    padding: 0 20px;
     box-sizing: border-box;
+    overflow: hidden;
   }
 }
 </style>

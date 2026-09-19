@@ -1,7 +1,7 @@
-<!-- 山东实时热词  -->
+<!-- 实时热词  -->
 <template>
   <CPanel>
-    <template #header>山东实时热词</template>
+    <template #header>{{ scopeName }}实时热词</template>
     <template #content>
       <div class="words">
         <CEcharts :option="option" />
@@ -11,75 +11,39 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed } from 'vue'
 import CPanel from '@/components/common/CPanel.vue'
 import CEcharts from '@/components/common/CEcharts.vue'
 import defaultIcon from '@/assets/images/real-circle-defalut.png'
 import hotIcon from '@/assets/images/real-circle-hot.png'
-const option = ref<any>({})
-const initEcharts = () => {
-  const wordsData: {
-    name: string
-    value: number
-    position: number[]
-  }[] = [
-    {
-      name: '海边',
-      value: 19,
-      position: [50, 50]
-    },
-    {
-      name: '人多',
-      value: 4,
-      position: [10, 30]
-    },
-    {
-      name: '孔子',
-      value: 8,
-      position: [85, 80]
-    },
-    {
-      name: '老师儿',
-      value: 2,
-      position: [27, 55]
-    },
-    {
-      name: '热情',
-      value: 6,
-      position: [68, 17]
-    },
+import { wordLayout } from '@/assets/data/cityData'
+import { useDashboardData } from '@/composables/useDashboardData'
 
-    {
-      name: '豪爽',
-      value: 7,
-      position: [20, 90]
-    },
-    {
-      name: '大葱',
-      value: 5,
-      position: [35, 20]
-    },
-    {
-      name: '美食',
-      value: 4,
-      position: [65, 89]
-    },
-    {
-      name: '泰山',
-      value: 16,
-      position: [90, 40]
-    }
-  ]
-  const optionData: any = []
-  // 渲染数据，并写入chart
-  wordsData.map((item: any) => {
-    optionData.push({
+const { scopeName, hotWords } = useDashboardData()
+
+const initEcharts = () => {
+  const optionData = hotWords.value.map((item, i) => {
+    const isProvince = hotWords.value.length > 5
+    const position: [number, number] = isProvince
+      ? ([
+          [50, 50],
+          [10, 30],
+          [85, 80],
+          [27, 55],
+          [68, 17],
+          [20, 90],
+          [35, 20],
+          [65, 89],
+          [90, 40]
+        ][i] as [number, number])
+      : wordLayout[i]
+    return {
       name: item.name,
       number: item.value,
-      value: item.position,
+      value: position,
       symbolSize: item.value > 15 ? 70 : 60,
       symbol: item.value > 15 ? 'image://' + hotIcon : 'image://' + defaultIcon
-    })
+    }
   })
   const options: any = {
     grid: {
@@ -144,9 +108,9 @@ const initEcharts = () => {
           }
         },
         animationDurationUpdate: 500,
-        animationEasingUpdate: 500,
+        animationEasingUpdate: 'cubicInOut',
         animationDelay: function (idx: number) {
-          return idx * 100
+          return idx * 60
         },
         data: optionData
       }
@@ -154,13 +118,12 @@ const initEcharts = () => {
   }
   return options
 }
-onMounted(() => {
-  option.value = initEcharts()
-})
+
+const option = computed(() => initEcharts())
 </script>
 
 <style lang="scss" scoped>
-::v-deep .panel-container {
+:deep(.panel-container) {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -168,12 +131,13 @@ onMounted(() => {
 .words {
   position: relative;
   width: 100%;
-  height: 200px;
+  height: 100%;
+  min-height: 150px;
   background: url('@/assets/images/热词背景.png') no-repeat center center;
-  background-size: 100% 175px;
+  background-size: 100% 100%;
   box-sizing: border-box;
   display: flex;
-  padding: 0 12px 14px 12px;
+  padding: 0 12px 6px 12px;
   flex-direction: column;
   gap: 16px;
 }

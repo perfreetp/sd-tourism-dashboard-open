@@ -1,7 +1,7 @@
 <!-- 年度接待游客比 -->
 <template>
   <CPanel>
-    <template #header>年度接待游客比</template>
+    <template #header>{{ scopeName }}年度接待游客比</template>
     <template #content>
       <CEcharts :option="option" />
     </template>
@@ -9,11 +9,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed } from 'vue'
 import * as echarts from 'echarts'
 import CPanel from '@/components/common/CPanel.vue'
 import CEcharts from '@/components/common/CEcharts.vue'
-const option = ref<any>({})
+import { useDashboardData } from '@/composables/useDashboardData'
+
+const { scopeName, monthly2021, monthly2022 } = useDashboardData()
+
 const createEchartLine = () => {
   return {
     tooltip: {
@@ -85,7 +88,7 @@ const createEchartLine = () => {
       {
         name: '2021年',
         type: 'line',
-        data: [23, 60, 20, 36, 23, 85, 70, 60, 78, 89, 68, 56],
+        data: monthly2021.value,
         lineStyle: {
           normal: {
             width: 2,
@@ -125,7 +128,7 @@ const createEchartLine = () => {
       {
         name: '2022年',
         type: 'line',
-        data: [145, 78, 88, 99, 36, 109, 120, 150, 99, 89, 100, 120],
+        data: monthly2022.value,
         lineStyle: {
           normal: {
             width: 2,
@@ -159,11 +162,12 @@ const createEchartLine = () => {
         smooth: true,
         symbol: 'none'
       }
-    ]
+    ],
+    animationDurationUpdate: 600,
+    animationEasingUpdate: 'cubicInOut'
   }
 }
-onMounted(() => {
-  option.value = createEchartLine()
-})
+
+const option = computed(() => createEchartLine())
 </script>
 <style lang="scss" scoped></style>

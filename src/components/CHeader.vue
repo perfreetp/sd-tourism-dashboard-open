@@ -1,6 +1,21 @@
 <!-- 顶部标题 -->
 <template>
   <header class="header">山东省旅游指标监控平台</header>
+  <!-- 当前查看范围 + 自动巡览开关 -->
+  <div class="view-bar">
+    <transition name="scope-badge" mode="out-in">
+      <div v-if="isProvince" key="province" class="scope-badge scope-badge--all">
+        <span class="dot"></span>当前查看：全省总览
+      </div>
+      <div v-else key="city" class="scope-badge scope-badge--city">
+        <span class="dot"></span>当前查看：{{ selectedCity }}
+      </div>
+    </transition>
+    <div class="tour-switch" :class="{ 'is-on': autoTour }" @click="toggleAutoTour">
+      <span class="tour-switch__label">自动巡览</span>
+      <span class="tour-switch__track"><span class="tour-switch__thumb"></span></span>
+    </div>
+  </div>
   <!-- 文字轮播 -->
   <div class="text-carousel">
     <transition-group name="carousel" tag="div" class="carousel-container">
@@ -13,6 +28,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useDashboard } from '@/stores/dashboard'
+
+const { selectedCity, isProvince, autoTour, toggleAutoTour } = useDashboard()
 
 // 轮播数据
 const carouselData = ref([
@@ -117,7 +135,7 @@ onBeforeUnmount(() => {
 
 .text-carousel {
   position: absolute;
-  top: 120px;
+  top: 160px;
   left: 50%;
   width: 744px;
   height: 43px;
@@ -133,6 +151,106 @@ onBeforeUnmount(() => {
   pointer-events: all;
   &:hover {
     background: linear-gradient(90deg, rgba(218, 163, 88, 0.1), rgba(218, 163, 88, 0.7), rgba(218, 163, 88, 0.1));
+  }
+}
+
+.view-bar {
+  position: absolute;
+  top: 112px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.scope-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 18px;
+  font-size: 15px;
+  letter-spacing: 1px;
+  border-radius: 15px;
+  border: 1px solid rgba(218, 163, 88, 0.7);
+  background: rgba(20, 30, 60, 0.72);
+  backdrop-filter: blur(2px);
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #58d3a0;
+    box-shadow: 0 0 8px #58d3a0;
+  }
+  &--city {
+    color: #ffd36e;
+    border-color: rgba(255, 210, 120, 0.9);
+    box-shadow: 0 0 14px rgba(218, 163, 88, 0.45);
+    .dot {
+      background: #ffb13d;
+      box-shadow: 0 0 8px #ffb13d;
+    }
+  }
+  &--all {
+    color: #cfe0ff;
+  }
+}
+.scope-badge-enter-active,
+.scope-badge-leave-active {
+  transition: all 0.3s ease;
+}
+.scope-badge-enter-from,
+.scope-badge-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+.tour-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 30px;
+  padding: 0 14px;
+  font-size: 14px;
+  color: #c9d3ea;
+  border-radius: 15px;
+  border: 1px solid rgba(109, 128, 175, 0.7);
+  background: rgba(20, 30, 60, 0.72);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.25s ease;
+  &:hover {
+    border-color: rgba(218, 163, 88, 0.9);
+  }
+  &__track {
+    position: relative;
+    width: 38px;
+    height: 18px;
+    border-radius: 9px;
+    background: rgba(92, 109, 152, 0.8);
+    transition: background 0.25s ease;
+  }
+  &__thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #d7e2f5;
+    transition: all 0.25s ease;
+  }
+  &.is-on {
+    color: #ffd36e;
+    border-color: rgba(218, 163, 88, 0.9);
+    box-shadow: 0 0 14px rgba(218, 163, 88, 0.35);
+    .tour-switch__track {
+      background: linear-gradient(90deg, #d39a45, #ffb13d);
+    }
+    .tour-switch__thumb {
+      left: 22px;
+      background: #fff6df;
+    }
   }
 }
 

@@ -1,7 +1,7 @@
 <!-- 各行业收入 -->
 <template>
   <CPanel>
-    <template #header>各行业收入</template>
+    <template #header>{{ scopeName }}各行业收入</template>
     <template #content>
       <CEcharts ref="chartRef" :option="option" @onload="startHighlightLoop" />
     </template>
@@ -9,47 +9,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import * as echarts from 'echarts'
 import CPanel from '@/components/common/CPanel.vue'
 import CEcharts from '@/components/common/CEcharts.vue'
+import { useDashboardData } from '@/composables/useDashboardData'
 
-const option = ref<any>({})
+const { scopeName, industry } = useDashboardData()
 const chartRef = ref()
 let highlightTimer: any = null
 let currentIndex = 0
-const VALUE = [100, 200, 300, 400, 500, 600, 700]
+
+const xAxisData = ['旅游', '住宿', '餐饮', '购物', '娱乐', '交通', '其他']
 
 const createEchartBar = () => {
-  const xAxisData = ['旅游', '住宿', '餐饮', '购物', '娱乐', '交通', '其他']
-  const seriesData = [
-    {
-      value: 100
-    },
-    {
-      value: 200
-    },
-    {
-      value: 300
-    },
-    {
-      value: 400
-    },
-    {
-      value: 500
-    },
-    {
-      value: 600
-    },
-    {
-      value: 700
-    }
-  ]
-
-  let maxAmount = 0
-  seriesData.map(item => {
-    item.value > maxAmount ? (maxAmount = item.value) : (maxAmount = maxAmount)
-  })
+  const seriesData = xAxisData.map((key) => ({
+    value: +(industry.value as any)[key].toFixed(1)
+  }))
 
   return {
     grid: {
@@ -123,9 +99,7 @@ const createEchartBar = () => {
           normal: {
             show: true,
             position: 'top',
-            formatter: (params: any) => {
-              return [...Object.values(seriesData[params.dataIndex])].join('\n')
-            },
+            formatter: (params: any) => seriesData[params.dataIndex].value,
             fontSize: 12,
             lineHeight: 16,
             color: '#93B9FF'
@@ -161,7 +135,7 @@ const createEchartBar = () => {
         },
         z: 1,
         zlevel: 0,
-        data: seriesData.map(item => item.value)
+        data: seriesData.map((item) => item.value)
       },
       {
         type: 'pictorialBar',
@@ -178,43 +152,38 @@ const createEchartBar = () => {
         symbolSize: [14, 2],
         symbolPosition: 'start',
         symbolOffset: [0, 0],
-        data: seriesData.map(item => item.value),
+        data: seriesData.map((item) => item.value),
         z: 2,
         zlevel: 0
       }
-    ]
+    ],
+    animationDurationUpdate: 600,
+    animationEasingUpdate: 'cubicInOut'
   }
 }
+
+const option = computed(() => createEchartBar())
 
 // 高亮循环方法
 const startHighlightLoop = (chart: any) => {
   if (!chart) return
-
-  // 如果已经存在定时器，先清除
   if (highlightTimer) {
     clearInterval(highlightTimer)
     highlightTimer = null
   }
-
   highlightTimer = setInterval(() => {
-    // 取消之前的高亮
     chart.dispatchAction({
       type: 'downplay'
     })
-    // 高亮当前柱子
     chart.dispatchAction({
       type: 'highlight',
       seriesIndex: 0,
       dataIndex: currentIndex
     })
-    // 更新索引，循环
-    currentIndex = (currentIndex + 1) % VALUE.length
+    currentIndex = (currentIndex + 1) % xAxisData.length
   }, 1500)
 }
 
-onMounted(() => {
-  option.value = createEchartBar()
-})
 onUnmounted(() => {
   if (highlightTimer) {
     clearInterval(highlightTimer)

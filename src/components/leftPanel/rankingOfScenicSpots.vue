@@ -1,9 +1,10 @@
 <!-- 景点人流排名 -->
 <template>
   <CPanel>
-    <template #header>景点人流排名</template>
+    <template #header>{{ scopeName }}景点人流排名</template>
     <template #content>
       <vue3ScrollSeamless
+        :key="scopeName"
         :dataList="list"
         class="list"
         :class-option="{
@@ -11,17 +12,12 @@
         }"
       >
         <div class="list-warpper">
-          <article class="list__item" v-for="(item, index) in list" :key="useId">
+          <article class="list__item" v-for="(item, index) in list" :key="item.label + index">
             <section class="item__index">{{ 'NO.' + (index + 1) }}</section>
             <section class="item__label">{{ item.label }}</section>
             <!-- 进度条 -->
             <div class="progress">
-              <span
-                class="progress__conent"
-                :style="{
-                  left: getProgressValue(item.value)
-                }"
-              ></span>
+              <span class="progress__conent" :style="{ left: getProgressValue(item.value) }"></span>
             </div>
           </article>
         </div>
@@ -31,20 +27,20 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { vue3ScrollSeamless } from 'vue3-scroll-seamless'
 import CPanel from '@/components/common/CPanel.vue'
-import { onMounted, ref, useId } from 'vue'
-import { rankingOfScenicSpots } from '@/assets/data/人流排名'
-const list = ref<{ label: string; value: number }[]>([])
-let maxValue = 0
+import { useDashboardData } from '@/composables/useDashboardData'
+
+const { scopeName, spotRanking } = useDashboardData()
+
+const list = computed(() => spotRanking.value.map((s) => ({ label: s.name, value: s.value })))
+const maxValue = computed(() => Math.max(...list.value.map((i) => i.value), 1))
+
 // 计算进度
 const getProgressValue = (value: number) => {
-  return -((maxValue - value) / maxValue) * 100 + '%'
+  return -((maxValue.value - value) / maxValue.value) * 100 + '%'
 }
-onMounted(() => {
-  list.value = rankingOfScenicSpots.sort((a, b) => b.value - a.value)
-  maxValue = rankingOfScenicSpots.reduce((acc, item) => acc + item.value, 0)
-})
 </script>
 <style lang="scss" scoped>
 .list {
@@ -69,11 +65,13 @@ onMounted(() => {
       color: rgba(244, 168, 65, 1);
     }
     .item__label {
-      width: 100px;
+      width: 130px;
       height: 100%;
       line-height: 40px;
       overflow: hidden;
       color: rgba(201, 211, 234, 1);
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
     .progress {
       position: relative;
@@ -87,6 +85,7 @@ onMounted(() => {
         height: 100%;
         width: 100%;
         background: linear-gradient(90deg, #ffa832, #f8c47d);
+        transition: left 0.6s cubic-bezier(0.22, 1, 0.36, 1);
       }
     }
   }

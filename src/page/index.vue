@@ -10,17 +10,40 @@
     <RightPanel />
     <!-- 底部组件 -->
     <CFooter />
+    <!-- 城市详情抽屉 -->
+    <CityDrawer />
   </main>
 </template>
 
 <script setup lang="ts">
+import { onMounted, onBeforeUnmount, watch } from 'vue'
+import autofit from 'autofit.js'
 import CHeader from '@/components/CHeader.vue'
 import CMap from '@/components/CMap.vue'
 import LeftPanel from '@/components/leftPanel.vue'
 import RightPanel from '@/components/rightPanel.vue'
 import CFooter from '@/components/CFooter.vue'
-import { onMounted } from 'vue'
-import autofit from 'autofit.js'
+import CityDrawer from '@/components/CityDrawer.vue'
+import { useDashboard } from '@/stores/dashboard'
+import { evaluateCity } from '@/stores/alerts'
+import { cityDataMap } from '@/assets/data/cityData'
+
+const { selectedCity, backToProvince } = useDashboard()
+
+const onKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'Escape' && selectedCity.value) {
+    backToProvince()
+  }
+}
+
+watch(
+  selectedCity,
+  (name) => {
+    if (name && cityDataMap[name]) {
+      evaluateCity(cityDataMap[name])
+    }
+  }
+)
 
 onMounted(() => {
   autofit.init({
@@ -29,6 +52,11 @@ onMounted(() => {
     dw: 1920,
     resize: true
   })
+  window.addEventListener('keydown', onKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
 })
 </script>
 

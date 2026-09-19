@@ -7,6 +7,8 @@
     <top5Tourists />
     <!-- 山东省实时热词 -->
     <realTimeHotWords />
+    <!-- 实时告警 -->
+    <realTimeAlerts />
   </div>
 </template>
 
@@ -14,6 +16,7 @@
 import industryRevenue from './rightPanel/industryRevenue.vue'
 import top5Tourists from './rightPanel/top5Tourists.vue'
 import realTimeHotWords from './rightPanel/realTimeHotWords.vue'
+import realTimeAlerts from './rightPanel/realTimeAlerts.vue'
 </script>
 
 <style lang="scss" scoped>
@@ -24,21 +27,24 @@ import realTimeHotWords from './rightPanel/realTimeHotWords.vue'
   right: 0;
   top: 0;
   display: grid;
-  gap: 24px;
-  padding: 111px 0 24px 0;
+  gap: 16px;
+  padding: 111px 0 16px 0;
   box-sizing: border-box;
   grid-template-columns: 1fr;
-  grid-template-rows: repeat(3, 1fr);
+  grid-template-rows: 1fr 1fr 1fr 1.45fr;
 }
-.panel{
-  right:-500px;
+.right-panel > :deep(.panel) {
+  min-height: 0;
+}
+.panel {
+  right: -500px;
   animation: entranceAnimation ease-in-out 0.75s forwards;
 }
 @keyframes entranceAnimation {
-  0%{
+  0% {
     right: -500px;
   }
-  100%{
+  100% {
     right: 0;
   }
 }

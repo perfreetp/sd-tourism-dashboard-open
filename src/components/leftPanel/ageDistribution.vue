@@ -1,7 +1,7 @@
 <!-- 游客年龄分布 -->
 <template>
   <CPanel class="age-distribution">
-    <template #header>游客年龄分布</template>
+    <template #header>{{ scopeName }}游客年龄分布</template>
     <template #content>
       <CEcharts ref="chartRef" :option="option" @onload="startHighlightLoop" />
     </template>
@@ -9,44 +9,39 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import * as echarts from 'echarts'
 import CPanel from '@/components/common/CPanel.vue'
 import CEcharts from '@/components/common/CEcharts.vue'
 import type { EChartsOption, TooltipComponentOption, CustomSeriesOption, BarSeriesOption } from 'echarts'
+import { useDashboardData } from '@/composables/useDashboardData'
 
-const option = ref<EChartsOption>({})
+const { scopeName, ageDist } = useDashboardData()
 const chartRef = ref()
 let highlightTimer: any = null
 let currentIndex = 0
-const values: number[] = [2000, 1430, 800, 410, 120]
+
 // 高亮循环方法
 const startHighlightLoop = (chart: any) => {
   if (!chart) return
-
-  // 如果已经存在定时器，先清除
   if (highlightTimer) {
     clearInterval(highlightTimer)
     highlightTimer = null
   }
-
   highlightTimer = setInterval(() => {
-    // 取消之前的高亮
     chart.dispatchAction({
       type: 'downplay'
     })
-    // 高亮当前柱子
     chart.dispatchAction({
       type: 'highlight',
       seriesIndex: 0,
       dataIndex: currentIndex
     })
-    // 更新索引，循环
-    currentIndex = (currentIndex + 1) % values.length
+    currentIndex = (currentIndex + 1) % ageDist.value.length
   }, 1500)
 }
 
-const createEchartBar = (): EChartsOption => {
+const createEchartBar = (values: number[]): EChartsOption => {
   const offsetX = 10
   const offsetY = 5
   // 创建左侧面
@@ -95,7 +90,7 @@ const createEchartBar = (): EChartsOption => {
     },
     buildPath: function (ctx: any, shape: any) {
       const c1 = [shape.x, shape.y]
-      const c2 = [shape.x + offsetX, shape.y - offsetY] //右点
+      const c2 = [shape.x + offsetX, shape.y - offsetY]
       const c3 = [shape.x, shape.y - offsetX]
       const c4 = [shape.x - offsetX, shape.y - offsetY]
       ctx.moveTo(c1[0], c1[1])
@@ -118,7 +113,7 @@ const createEchartBar = (): EChartsOption => {
       },
       formatter: function (params: any) {
         const item = params[1]
-        return item.name + ' : ' + item.value
+        return item.name + ' : ' + item.value + ' 万人'
       }
     } as TooltipComponentOption,
     grid: {
@@ -202,7 +197,6 @@ const createEchartBar = (): EChartsOption => {
                     }
                   ])
                 },
-                // hover样式
                 emphasis: {
                   style: {
                     fill: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
@@ -314,12 +308,14 @@ const createEchartBar = (): EChartsOption => {
         tooltip: {},
         data: values
       } as BarSeriesOption
-    ]
+    ],
+    animationDurationUpdate: 600,
+    animationEasingUpdate: 'cubicInOut'
   }
 }
-onMounted(() => {
-  option.value = createEchartBar()
-})
+
+const option = computed<EChartsOption>(() => createEchartBar(ageDist.value))
+
 onUnmounted(() => {
   if (highlightTimer) {
     clearInterval(highlightTimer)
